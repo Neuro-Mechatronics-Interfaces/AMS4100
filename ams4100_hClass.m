@@ -258,6 +258,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
         function delete(obj)
             if obj.PortEthernet
                 % destroying the object should clear the ethernet port
+                delete(obj.PortInfo);
             else
                 % destroying the object should clear the serialport
             end

@@ -17,11 +17,11 @@
 % 1) Open a tcpclient connection that matches the IP Adr on your stimulator
 % (in the General:Net front panel page
 
-disp( 'Setting up tcpclient to 10.0.0.81')
+disp( 'Setting up tcpclient to 10.0.0.91')
 
 % 1.2) Define the client
 
-t=tcpclient('10.0.0.81',23,"Timeout",20,"ConnectTimeout",30); %port 23
+t=tcpclient('10.0.0.91',23,"Timeout",20,"ConnectTimeout",30); %port 23
 pause(1); % and give it a bit of time to set up
 % 2) Flush old data sitting on the port
 read(t);   % empties buffer
@@ -74,33 +74,6 @@ pause(5);
 % clear the port
 clear t;
 clear;
-
-function outstr=Send2Stimulator(port,instr)
-    if(port.BytesAvailable>0)
-        read(port); %empties the buffer
-    end
-    write(port,uint8(sprintf('%s\r',instr)));
-    fprintf('Send= %s\t\t',instr);  %display send strring
-    c=0;
-    while(port.BytesAvailable<1)
-        c=c+1;
-        pause(0.00001);
-    end   
-    rplyStr=read(port,port.BytesAvailable,'char');
-    
-    rplyStr=erase(rplyStr,char(13));   % remove charriage returns
-    rplyStr=strrep(rplyStr,newline,'~'); %replace line feeds with ~
-    rplyStr=strrep(rplyStr,'~~','~');
-    if contains(rplyStr,'*')
-        rplyStr=rplyStr(1:strfind(rplyStr,'*'));
-    end
-    if(contains(rplyStr,'Bad','IgnoreCase',true) || contains(rplyStr,'?','IgnoreCase',true) )
-        fprintf(2,'  %i Reply= %s \n', c,rplyStr);  %display reply
-    else
-        fprintf('  %i Reply= %s \n', c,rplyStr);  %display reply
-    end
-     outstr=rplyStr;
-end
 
 
 
