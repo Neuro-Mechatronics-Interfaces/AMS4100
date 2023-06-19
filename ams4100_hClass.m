@@ -114,7 +114,8 @@ classdef ams4100_hClass < matlab.mixin.SetGet
         SerialNumber='';
         values;
         MCUrev=0;
-        MatlabRev='4.0';
+        MatlabRev='4.0.NML';
+        Logger
     end
     properties
         loading=0;  % a variable that is set to 1 if the entire library data set is being loaded. turns off start and stop
@@ -235,6 +236,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     obj.MCUrev=getMCUrev(obj);  % gets a the single digit number after the 'M'
                     obj.Network=SendReceiveString(obj,'g n');
                     obj.SerialNumber=SendReceiveString(obj,'g m 1 6');
+                    obj.Logger = mlog.Logger(sprintf('AMS4100_%s',obj.SerialNumber));
                     UpdateEventList(obj);
                 else
                     obj.PortSuccess=0;
@@ -258,11 +260,15 @@ classdef ams4100_hClass < matlab.mixin.SetGet
         function delete(obj)
             if obj.PortEthernet
                 % destroying the object should clear the ethernet port
-                delete(obj.PortInfo);
+                try %#ok<TRYNC> 
+                    delete(obj.PortInfo);
+                end
             else
                 % destroying the object should clear the serialport
             end
-            
+            try %#ok<TRYNC> 
+                delete(obj.Logger);
+            end
         end
         %% Get/Set Properties
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -317,6 +323,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Output=obj.GetInfo(obj.CONST.menu.general,obj.CONST.general.mode,obj.priv_Output);
             out=obj.priv_Output;
+            obj.Logger.info(sprintf('get::Mode=%s',out));
         end
         function set.Mode(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -328,6 +335,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_Output=obj.getfieldstr(obj.values.mode, value);
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.general,obj.CONST.general.mode,value);
+                    obj.Logger.info(sprintf('set::Mode=%d',value));
                     Run(obj);
                 end
             end
@@ -335,7 +343,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         function out = get.IsoOutput(obj)
-            % The Trigger property
+            % The IsoOutput property
             %
             % Valid values are from ComConstants.m:
             %   EXAMPLE: handle.Trigger =1;
@@ -343,6 +351,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_IsoOutput=obj.GetInfo(obj.CONST.menu.general,obj.CONST.general.isoOutput,obj.priv_IsoOutput);
             out=obj.priv_IsoOutput;
+            obj.Logger.info(sprintf('get::IsoOutput=%s',out));
         end
         function set.IsoOutput(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -355,6 +364,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     obj.priv_IsoOutput=obj.getfieldstr(obj.values.isoOutput,value);
                     %  sprintf('s m %d %d %d',uint8(obj.CONST.menu.general),uint8(obj.CONST.general.trigger),uint64(trigger(value)))
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.general,obj.CONST.general.isoOutput ,value);
+                    obj.Logger.info(sprintf('set::IsoOutput=%d',value));
                     %          Run(obj);
                 end
             end
@@ -384,6 +394,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             % end
             obj.priv_Active=obj.SendReceiveString('g a');
             out=obj.priv_Active;
+            obj.Logger.info(sprintf('get::Active=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.Trigger(obj)
@@ -395,6 +406,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Trigger=obj.GetInfo(obj.CONST.menu.general,obj.CONST.general.trigger,obj.priv_Trigger);
             out=obj.priv_Trigger;
+            obj.Logger.info(sprintf('get::Trigger=%s',out));
         end
         function set.Trigger(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -407,6 +419,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     obj.priv_Trigger=obj.getfieldstr(obj.values.trigger,value);
                     %  sprintf('s m %d %d %d',uint8(obj.CONST.menu.general),uint8(obj.CONST.general.trigger),uint64(trigger(value)))
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.general,obj.CONST.general.trigger ,value);
+                    obj.Logger.info(sprintf('set::Trigger=%d',value));
                     Run(obj);
                 end
             end
@@ -421,6 +434,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Auto=obj.GetInfo(obj.CONST.menu.general,obj.CONST.general.auto,obj.priv_Auto);
             out=obj.priv_Auto;
+            obj.Logger.info(sprintf('get::Auto=%s',out));
         end
         function set.Auto(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -432,6 +446,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_Auto=obj.getfieldstr( obj.values.auto , value );
                     obj.PortSuccess=obj.SetInfo( obj.CONST.menu.general,obj.CONST.general.auto , value );
+                    obj.Logger.info(sprintf('set::Auto=%d',value));
                     Run(obj);
                 end
             end
@@ -446,6 +461,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Monitor=obj.GetInfo(obj.CONST.menu.general,obj.CONST.general.monitor,obj.priv_Monitor);
             out=obj.priv_Monitor;
+            obj.Logger.info(sprintf('get::Monitor=%s',out));
         end
         function set.Monitor(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -457,6 +473,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_Monitor=obj.getfieldstr( obj.values.monitor , value );
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.general,obj.CONST.general.monitor ,value);
+                    obj.Logger.info(sprintf('set::Monitor=%d',value));
                     Run(obj);
                 end
             end
@@ -471,6 +488,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Sync1=obj.GetInfo(obj.CONST.menu.config,obj.CONST.config.sync1,obj.priv_Sync1);
             out=obj.priv_Sync1;
+            obj.Logger.info(sprintf('get::Sync1=%s',out));
         end
         function set.Sync1(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -482,6 +500,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_Sync1=obj.getfieldstr( obj.values.sync , value );
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.config, obj.CONST.config.sync1, value);
+                    obj.Logger.info(sprintf('set::Sync1=%d',value));
                     Run(obj);
                 end
             end
@@ -496,6 +515,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_Sync2=obj.GetInfo(obj.CONST.menu.config,obj.CONST.config.sync2,obj.priv_Sync2);
             out=obj.priv_Sync2;
+            obj.Logger.info(sprintf('get::Sync2=%s',out));
         end
         function set.Sync2(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -507,6 +527,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_Sync2=obj.getfieldstr( obj.values.sync , value );
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.config, obj.CONST.config.sync2, value);
+                    obj.Logger.info(sprintf('set::Sync2=%d',value));
                     Run(obj);
                 end
             end
@@ -521,6 +542,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_PeriodOrFreq=obj.GetInfo(obj.CONST.menu.config,obj.CONST.config.periodOrFreq,obj.priv_PeriodOrFreq);
             out=obj.priv_PeriodOrFreq;
+            obj.Logger.info(sprintf('get::PeriodOrFreq=%s',out));
         end
         function set.PeriodOrFreq(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -532,6 +554,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_PeriodOrFreq=obj.getfieldstr( obj.values.periodOrFreq, value);
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.config,obj.CONST.config.periodOrFreq,value);
+                    obj.Logger.info(sprintf('set::PeriodOrFreq=%d',value));
                     Run(obj);
                 end
             end
@@ -546,6 +569,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainType=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.type,obj.priv_TrainType);
             out=obj.priv_TrainType;
+            obj.Logger.info(sprintf('get::TrainType=%s',out));
         end
         function set.TrainType(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -557,6 +581,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_TrainType=obj.getfieldstr( obj.values.train.type , value );
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train,obj.CONST.train.type, value );
+                    obj.Logger.info(sprintf('set::TrainType=%d',value));
                     Run(obj);
                 end
             end
@@ -571,6 +596,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainDelay=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.delay,obj.priv_TrainDelay);
             out=obj.priv_TrainDelay;
+            obj.Logger.info(sprintf('get::TrainDelay=%s',out));
         end
         function set.TrainDelay(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -582,6 +608,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_TrainDelay=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.delay, value);
+                    obj.Logger.info(sprintf('set::TrainDelay=%d',value));
                     Run(obj);
                 end
             end
@@ -593,6 +620,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                 obj.CONST.uniformevent.number, ...
                 obj.priv_UniformNumber);
             out=obj.priv_UniformNumber;
+            obj.Logger.info(sprintf('get::UniformNumber=%s',out));
         end
         function set.UniformNumber(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -608,6 +636,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                         value);
                     %AMS_UpdateEventTable();
                     %AMS_UpdateEvents();
+                    obj.Logger.info(sprintf('set::UniformNumber=%d',value));
                     Run(obj);
                 end
             end
@@ -619,14 +648,16 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             bitPos=4;
             obj.priv_HighVflag=bitand(bitshift(double(tmp(1)),-bitPos),1);
             out=obj.priv_HighVflag;
+            obj.Logger.info(sprintf('get::HighVflag=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.HighIflag(obj)
-            % The HighVflag property
+            % The HighIflag property
             tmp=SendReceiveString(obj,'g c');
             bitPos=3;
             obj.priv_HighIflag=bitand(bitshift(double(tmp(1)),-bitPos),1);
             out=obj.priv_HighIflag;
+            obj.Logger.info(sprintf('get::HighIflag=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.Generating(obj)
@@ -635,6 +666,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             bitPos=2;
             obj.priv_Generating=bitand(bitshift(double(tmp(1)),-bitPos),1);
             out=obj.priv_Generating;
+            obj.Logger.info(sprintf('get::Generating=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.Running(obj)
@@ -643,6 +675,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             bitPos=1;
             obj.priv_Running=bitand(bitshift(double(tmp(1)),-bitPos),1);
             out=obj.priv_Running;
+            obj.Logger.info(sprintf('get::Running=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.EnableButtonIn(obj)
@@ -651,6 +684,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             bitPos=0;
             obj.priv_EnableButtonIn=bitand(bitshift(double(tmp(1)),-bitPos),1);
             out=obj.priv_EnableButtonIn;
+            obj.Logger.info(sprintf('get::EnableButtonIn=%s',out));
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function out = get.TrainDur(obj)
@@ -663,6 +697,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainDur=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.duration,obj.priv_TrainDur);
             out=obj.priv_TrainDur;
+            obj.Logger.info(sprintf('get::TrainDur=%s',out));
         end
         function set.TrainDur(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -674,6 +709,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_TrainDur=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.duration, value);
+                    obj.Logger.info(sprintf('set::TrainDur=%d',value));
                     Run(obj);
                 end
             end
@@ -688,6 +724,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainPeriod=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.period,obj.priv_TrainPeriod);
             out=obj.priv_TrainPeriod;
+            obj.Logger.info(sprintf('get::TrainPeriod=%s',out));
         end
         function set.TrainPeriod(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -701,6 +738,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     freq=round(1000000/value);
                     obj.priv_TrainFrequency=freq;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.period, value);
+                    obj.Logger.info(sprintf('set::TrainPeriod=%d',value));
                     Run(obj);
                 end
             end
@@ -715,6 +753,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainQuantity=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.quantity,obj.priv_TrainQuantity);
             out=obj.priv_TrainQuantity;
+            obj.Logger.info(sprintf('get::TrainQuantity=%s',out));
         end
         function set.TrainQuantity(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -726,6 +765,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_TrainQuantity=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.quantity, value);
+                    obj.Logger.info(sprintf('set::TrainQuantity=%d',value));
                     Run(obj);
                 end
             end
@@ -740,6 +780,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_TrainLevel=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.level,obj.priv_TrainLevel);
             out=obj.priv_TrainLevel;
+            obj.Logger.info(sprintf('get::TrainLevel=%s',out));
         end
         function set.TrainLevel(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -751,6 +792,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_TrainLevel=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.level, value);
+                    obj.Logger.info(sprintf('set::TrainLevel=%d',value));
                     Run(obj);
                 end
             end
@@ -764,6 +806,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %   EXAMPLE: handle.TrainPeriod =67; (Hz)
             %
             out=obj.priv_TrainFrequency;
+            obj.Logger.info(sprintf('get::TrainFrequency=%s',out));
         end
         function set.TrainFrequency(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -778,6 +821,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                         obj.priv_TrainFrequency=value;
                         obj.priv_TrainPeriod=period;
                         obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.period, period);
+                        obj.Logger.info(sprintf('set::TrainFrequency=%d',value));
                         Run(obj);
                     end
                 else
@@ -795,6 +839,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_OffsetOrHold=obj.GetInfo(obj.CONST.menu.train,obj.CONST.train.offsetOrHold,obj.priv_OffsetOrHold);
             out=obj.priv_OffsetOrHold;
+            obj.Logger.info(sprintf('get::OffsetOrHold=%s',out));
         end
         function set.OffsetOrHold(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -806,6 +851,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_OffsetOrHold=obj.getfieldstr( obj.values.offsetOrHold, value);
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.train, obj.CONST.train.offsetOrHold, value);
+                    obj.Logger.info(sprintf('set::OffsetOrHold=%d',value));
                     Run(obj);
                 end
             end
@@ -849,6 +895,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %   EXAMPLE: handle.LibID =1 ;
             %
             out=obj.priv_LibID;
+            obj.Logger.info(sprintf('get::LibID=%s',out));
         end
         function set.LibID(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -858,6 +905,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     error('LibID must be an integer from 1 to 20');
                 else
                     obj.priv_LibID=value;
+                    obj.Logger.info(sprintf('set::LibID=%d',value));
                     %obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event, event.libID, value);
                     %AMS_UpdateEventTable();
                     %AMS_UpdateEvents();
@@ -874,6 +922,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventType=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.type,obj.priv_EventType);
             out=obj.priv_EventType;
+            obj.Logger.info(sprintf('get::EventType=%s',out));
         end
         function set.EventType(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -885,6 +934,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventType=obj.getfieldstr( obj.values.event.type , value );
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.type, value);
+                    obj.Logger.info(sprintf('set::EventType=%d',value));
                     Run(obj);
                 end
             end
@@ -899,6 +949,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventDelay=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.delay,obj.priv_EventDelay);
             out=obj.priv_EventDelay;
+            obj.Logger.info(sprintf('get::EventDelay=%s',out));
         end
         function set.EventDelay(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -910,6 +961,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventDelay=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.delay, value);
+                    obj.Logger.info(sprintf('set::EventDelay=%d',value));
                     Run(obj);
                 end
             end
@@ -924,6 +976,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventDur1=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur1,obj.priv_EventDur1);
             out=obj.priv_EventDur1;
+            obj.Logger.info(sprintf('get::EventDur1=%s',out));
         end
         function set.EventDur1(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -935,6 +988,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventDur1=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur1, value);
+                    obj.Logger.info(sprintf('set::EventDur1=%d',value));
                     Run(obj);
                 end
             end
@@ -949,6 +1003,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventDur2=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur2,obj.priv_EventDur2);
             out=obj.priv_EventDur2;
+            obj.Logger.info(sprintf('get::EventDur2=%s',out));
         end
         function set.EventDur2(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -960,6 +1015,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventDur2=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur2, value);
+                    obj.Logger.info(sprintf('set::EventDur2=%d',value));
                     Run(obj);
                 end
             end
@@ -974,6 +1030,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventDur3=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur3,obj.priv_EventDur3);
             out=obj.priv_EventDur3;
+            obj.Logger.info(sprintf('get::EventDur3=%s',out));
         end
         function set.EventDur3(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -985,6 +1042,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventDur3=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.dur3, value);
+                    obj.Logger.info(sprintf('set::EventDur3=%d',value));
                     Run(obj);
                 end
             end
@@ -999,6 +1057,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventPeriod=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.period,obj.priv_EventPeriod);
             out=obj.priv_EventPeriod;
+            obj.Logger.info(sprintf('get::EventPeriod=%s',out));
         end
         function set.EventPeriod(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -1012,6 +1071,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     obj.priv_EventPeriod=value;
                     obj.priv_EventFrequency=freq;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.period, value);
+                    obj.Logger.info(sprintf('set::EventPeriod=%d',value));
                     Run(obj);
                 end
             end
@@ -1026,6 +1086,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventQuantity=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1,obj.CONST.event.quantity,obj.priv_EventQuantity);
             out=obj.priv_EventQuantity;
+            obj.Logger.info(sprintf('get::EventQuantity=%s',out));
         end
         function set.EventQuantity(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -1037,6 +1098,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventQuantity=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.quantity, value);
+                    obj.Logger.info(sprintf('set::EventQuantity=%d',value));
                     Run(obj);
                 end
             end
@@ -1050,6 +1112,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %   EXAMPLE: handle.EventFrequency =67; (Hz)
             %
             out=obj.priv_EventFrequency;
+            obj.Logger.info(sprintf('get::EventFrequency=%s',out));
         end
         function set.EventFrequency(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -1064,6 +1127,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                         obj.priv_EventFrequency=value;
                         obj.priv_EventPeriod=period;
                         obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.period, period);
+                        obj.Logger.info(sprintf('set::EventFrequency=%d',value));
                         Run(obj);
                     end
                 else
@@ -1081,6 +1145,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventAmp1=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.amp1,obj.priv_EventAmp1);
             out=obj.priv_EventAmp1;
+            obj.Logger.info(sprintf('get::EventAmp1=%s',out));
         end
         function set.EventAmp1(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -1092,6 +1157,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventAmp1=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.amp1, value);
+                    obj.Logger.info(sprintf('set::EventAmp1=%d',value));
                     Run(obj);
                 end
             end
@@ -1106,6 +1172,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             obj.priv_EventAmp2=obj.GetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.amp2,obj.priv_EventAmp2);
             out=obj.priv_EventAmp2;
+            obj.Logger.info(sprintf('get::EventAmp2=%s',out));
         end
         function set.EventAmp2(obj,value)
             if size(value,2) ~= 1 || size(value,1)~= 1
@@ -1117,6 +1184,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     Stop(obj);
                     obj.priv_EventAmp2=value;
                     obj.PortSuccess=obj.SetInfo(obj.CONST.menu.event+obj.LibID-1, obj.CONST.event.amp2, value);
+                    obj.Logger.info(sprintf('set::EventAmp2=%d',value));
                     Run(obj);
                 end
             end
@@ -1137,6 +1205,9 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             % speed up PC time.
             % UpdateEventList(obj);  overkill?
             out=obj.priv_EventList;
+            for ii = 1:numel(out)
+                obj.Logger.info(sprintf('get::EventAmpList%d=%d',ii,out(ii)));
+            end
         end
         function set.EventList(obj,value)
             if size(value,2) > 20 || size(value,1)~= 1
@@ -1155,6 +1226,7 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                             slot=i+12;
                         end
                         obj.PortSuccess=obj.SetInfo(obj.CONST.menu.eventlist,slot,value(i));
+                        obj.Logger.info(sprintf('set::EventAmpList%d=%s',i,value(i)));
                     end
                     Run(obj);
                 end
@@ -1261,10 +1333,13 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             if ~obj.loading
                 try
+                    obj.Logger.info('out::s t one');
                     strOut=obj.SendReceiveString('s t one');
                     obj.PortSuccess=strcmp(strOut,'*');
+                    obj.Logger.info('event::stim=1');
                 catch
                     obj.PortSuccess=0;
+                    obj.Logger.error('event::stim=-1');
                     warning('No Instrument communication')
                 end
             end
@@ -1281,10 +1356,13 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             if ~obj.loading
                 try
+                    obj.Logger.info('out::s t none');
                     strOut=obj.SendReceiveString('s t none');
                     obj.PortSuccess=strcmp(strOut,'*');
+                    obj.Logger.info('event::stop=1');
                 catch
                     obj.PortSuccess=0;
+                    obj.Logger.error('event::stop=-1');
                     warning('No Instrument communication')
                 end
             end
@@ -1301,10 +1379,13 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             if ~obj.loading
                 try
+                    obj.Logger.info('out::s t free');
                     strOut=obj.SendReceiveString('s t free');
                     obj.PortSuccess=strcmp(strOut,'*');
+                    obj.Logger.info('event::free=1');
                 catch
                     obj.PortSuccess=0;
+                    obj.Logger.error('event::free=-1');
                     warning('No Instrument communication')
                 end
             end
@@ -1323,10 +1404,13 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             if ~obj.loading
                 try
+                    obj.Logger.info('out::s r o');
                     strOut=obj.SendReceiveString('s r o');
                     obj.PortSuccess=strcmp(strOut,'*');
+                    obj.Logger.info('event::openrelay=1');
                 catch
                     obj.PortSuccess=0;
+                    obj.Logger.error('event::openrelay=-1');
                     warning('No Instrument communication')
                 end
             end
@@ -1345,10 +1429,13 @@ classdef ams4100_hClass < matlab.mixin.SetGet
             %
             if ~obj.loading
                 try
+                    obj.Logger.info('out::s r c');
                     strOut=obj.SendReceiveString('s r c');
                     obj.PortSuccess=strcmp(strOut,'*');
+                    obj.Logger.info('event::closerelay=1');
                 catch
                     obj.PortSuccess=0;
+                    obj.Logger.error('event::closerelay=-1');
                     warning('No Instrument communication')
                 end
             end
@@ -1387,7 +1474,10 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     if obj.MCUrev > 1 && cmd(1)=='s'   % Add pin in necessary
                         cmd=sprintf('%d %s',obj.PIN,cmd);
                     end
-                    fprintf('out=: %s     ',cmd);  % display output
+%                     fprintf('out=: %s     ',cmd);
+                    if ~isempty(obj.Logger)
+                        obj.Logger.info(sprintf('out::%s',cmd));  % display output
+                    end
                     if obj.PortEthernet
                         read(obj.PortInfo);  % empties the port
                         write(obj.PortInfo,uint8(sprintf('%s\r',cmd)))
@@ -1398,9 +1488,15 @@ classdef ams4100_hClass < matlab.mixin.SetGet
                     % pause(delay);  % wait for transmission
                     outStr=readReply(obj);
                     if(contains(outStr,'Bad','IgnoreCase',true) || contains(outStr,'?','IgnoreCase',true) )
-                        fprintf(2,'reply = %s \n', outStr);  %display reply
+%                         fprintf(2,'reply = %s \n', outStr);  %display reply
+                        if ~isempty(obj.Logger)
+                            obj.Logger.error(sprintf('result::%s',outStr));
+                        end
                     else
-                        fprintf('reply = %s \n', outStr);  %display reply
+%                         fprintf('reply = %s \n', outStr);  %display reply
+                        if ~isempty(obj.Logger)
+                            obj.Logger.info(sprintf('result::%s',outStr));
+                        end
                     end
                     lns=length(outStr);
                     if lns ~=0
