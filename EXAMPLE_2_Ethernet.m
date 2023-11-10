@@ -17,11 +17,11 @@
 % 1) Open a tcpclient connection that matches the IP Adr on your stimulator
 % (in the General:Net front panel page
 
-disp( 'Setting up tcpclient to 10.0.0.91')
+disp( 'Setting up tcpclient to 192.168.0.50')
 
 % 1.2) Define the client
 
-t=tcpclient('10.0.0.91',23,"Timeout",20,"ConnectTimeout",30); %port 23
+t=tcpclient('192.168.0.50',23,"Timeout",20,"ConnectTimeout",30); %port 23
 pause(1); % and give it a bit of time to set up
 % 2) Flush old data sitting on the port
 read(t);   % empties buffer
@@ -34,6 +34,7 @@ pause(0.01); % and give it a bit of time to reply
 rplStr=read(t,t.BytesAvailable,'string');
 fprintf('Reply= %s \n', rplStr);  %display reply
 
+%%
 
 rplStr=Send2Stimulator(t,'get active');
 

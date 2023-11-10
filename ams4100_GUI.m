@@ -73,7 +73,7 @@ WindowW=1150;
     MainWindow=makeFigure(WindowW,WindowH);  % Main window width,height
     handles=makePanel(MainWindow,WindowW,WindowH);
     guidata(MainWindow, handles);  
-    myAMS=ams4100_hClass('10.0.0.91');
+    myAMS=ams4100_hClass('192.168.0.50');
     pause(0.05);
     LoadWindow(); 
     Plotit();
